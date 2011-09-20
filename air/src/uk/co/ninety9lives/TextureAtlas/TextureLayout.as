@@ -1,8 +1,11 @@
-package com.pixelrevision.textureAtlas{
-	
+package uk.co.ninety9lives.TextureAtlas
+{
 	import com.adobe.images.PNGEncoder;
 	import com.adobe.serialization.json.JSON;
 	import com.adobe.serialization.json.JSONEncoder;
+	import com.pixelrevision.textureAtlas.LUAGenerator;
+	import com.pixelrevision.textureAtlas.TextureItem;
+	import com.pixelrevision.textureAtlas.TextureLayout;
 	import com.pixelrevision.textureAtlas.events.TextureAtlasEvent;
 	
 	import deng.fzip.FZip;
@@ -12,113 +15,39 @@ package com.pixelrevision.textureAtlas{
 	import flash.display.IBitmapDrawable;
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
+	import flash.filesystem.File;
+	import flash.filesystem.FileMode;
+	import flash.filesystem.FileStream;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	import flash.net.FileReference;
 	import flash.utils.ByteArray;
 	
-	public class TextureLayout extends Sprite{
-		
-		protected var _settings:Settings;
-		protected var _currentLab:String = "";
-		protected var _items:Array = [];
-		
-		public function TextureLayout(){
+	public class TextureLayout extends com.pixelrevision.textureAtlas.TextureLayout
+	{
+		public function TextureLayout()
+		{
 			super();
-			_settings = Settings.sharedInstance;
-			_settings.addEventListener(TextureAtlasEvent.CANVAS_SIZE_CHANGED, drawBounds);
-			drawBounds(null);
 		}
+		public var scale:Number = 1;
 		
-		public function layoutChildren():void{
-			var xPos:Number = 0;
-			var yPos:Number = 0;
-			var maxY:Number = 0;
-			for(var i:uint=0; i<_items.length; i++){
-				if( (xPos + _items[i].width) > _settings.canvasWidth){
-					xPos = 0;
-					yPos += maxY;
-					maxY = 0;
-				}
-				if(_items[i].height + 1 > maxY){
-					maxY = _items[i].height + 1;
-				}
-				_items[i].x = xPos;
-				_items[i].y = yPos;
-				xPos += _items[i].width + 1;
-			}
-		}
-		
-		protected function drawBounds(e:TextureAtlasEvent):void{
-			graphics.clear();
-			graphics.lineStyle(1, 0x000000);
-			graphics.drawRect(0, 0, _settings.canvasWidth-1, _settings.canvasHeight-1);
-			layoutChildren();
-			dispatchEvent(new TextureAtlasEvent(TextureAtlasEvent.CANVAS_SIZE_CHANGED) );
-		}
-		
-		public function get withinBounds():Boolean{
-			trace(this.width, _settings.canvasWidth, this.height, _settings.canvasHeight);
-			//Math.floor corrects for a rare rounding error
-			return (Math.floor(this.width) <= _settings.canvasWidth && Math.floor(this.height) <= _settings.canvasHeight);
-		}
-		
-		public function addItem(item:TextureItem):void{
-			_items.push(item);
-			addChild(item);
-		}
-		
-		public function clear():void{
-			for(var i:uint=0; i<_items.length; i++){
-				removeChild(_items[i]);
-			}
-			_currentLab = "";
-			_items = [];
-		}
-		
-		public function processSWF(swf:MovieClip):void{
-			clear();
-			var parseFrame:Boolean = false;
-			var selected:MovieClip;
-			var itemW:Number;
-			var itemH:Number;
-			var bounds:Rectangle;
-			
-			for(var i:uint=0; i<swf.numChildren; i++){
-				selected = MovieClip( swf.getChildAt(i) );
-				
-				// check for frames
-				if(selected.totalFrames > 1){
-					for(var m:uint=0; m<selected.totalFrames; m++){
-						selected.gotoAndStop(m+1);
-						drawItem(selected, selected.name + "_" + appendIntToString(m, 5), selected.name);
-					}
-				}else{
-					drawItem(selected, selected.name, selected.name);
-				}
-			}
-			layoutChildren();
-		}
-		
-		protected function appendIntToString(num:int, numOfPlaces:int):String{
-			var numString:String = num.toString();
-			var outString:String = "";
-			for(var i:int=0; i<numOfPlaces - numString.length; i++){
-				outString += "0";
-			}
-			return outString + numString;
-		}
-		
-		protected function drawItem(clip:MovieClip, name:String = "", baseName:String =""):TextureItem{
-	
-			var label:String = "";
 
+		override protected function drawItem(clip:MovieClip, name:String = "", baseName:String =""):TextureItem{
+			
+			var label:String = "";
+			
 			var bounds:Rectangle = clip.getBounds(clip.parent);
-	
+			bounds.x *=scale;
+			bounds.y *=scale;
+			bounds.width *=scale;
+			bounds.height *=scale;
+			
 			var itemW:Number = Math.ceil(bounds.x + bounds.width);
 			var itemH:Number = Math.ceil(bounds.y + bounds.height);
+			var matrix:Matrix = new Matrix();
+			matrix.scale(scale,scale);
 			var bmd:BitmapData = new BitmapData(itemW, itemH, true, 0x00000000);
-			bmd.draw(clip);
+			bmd.draw(clip, matrix);
 			if(clip.currentLabel != _currentLab && clip.currentLabel != null){
 				_currentLab = clip.currentLabel;
 				label = _currentLab;
@@ -128,7 +57,7 @@ package com.pixelrevision.textureAtlas{
 			return item;
 		}
 		
-		public function save():void{
+		 public function saveLocal(basename:String, dest_dir:String):void{
 			graphics.clear();
 			// prepare files
 			var bmd:BitmapData = new BitmapData(_settings.canvasWidth, _settings.canvasHeight, true, 0x000000);
@@ -136,12 +65,10 @@ package com.pixelrevision.textureAtlas{
 			json.textures = [];
 			json.imagePath = _settings.textureName  + ".png";
 			
-		
-			
 			var xml:XML = new XML(<TextureAtlas></TextureAtlas>);
 			xml.@imagePath = _settings.textureName  + ".png";
 			
-		
+			
 			for(var i:uint=0; i<_items.length; i++){
 				var matrix:Matrix = new Matrix();
 				matrix.tx = _items[i].x;
@@ -172,10 +99,20 @@ package com.pixelrevision.textureAtlas{
 			var lua:String = luaGenerator.generate(_items);
 			// trace(lua);
 			
-			// now setup zip
+			// now setup writeable objects
 			var img:ByteArray = PNGEncoder.encode(bmd);
 			var xmlString:String = xml.toString();
 			var jsonString:String = JSON.encode(json);
+			
+			
+			//Write Each file
+			
+			var imgFile:File = new File(dest_dir+basename+".png");
+			var imgFileStream:FileStream = new FileStream();
+			imgFileStream.open(imgFile, FileMode.WRITE); 
+			imgFileStream.writeBytes(img);
+			
+			/*
 			var zip:FZip = new FZip();
 			zip.addFile(_settings.textureName + ".png", img);
 			zip.addFileFromString(_settings.textureName + ".xml", xmlString);
@@ -188,11 +125,9 @@ package com.pixelrevision.textureAtlas{
 			var fr:FileReference = new FileReference();
 			fr.save(zipArray, _settings.textureName + ".zip");
 			
-			
+			*/
 			
 			drawBounds(null);
 		}
-		
-		
 	}
 }

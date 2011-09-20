@@ -22,6 +22,11 @@ package com.pixelrevision.textureAtlas{
 		
 		public function TextureAtlas(){
 			super();
+			addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+			
+		}
+		
+		private function onAddedToStage(e:Event) {
 			setup();
 		}
 		

@@ -6,8 +6,10 @@ package com.pixelrevision.textureAtlas{
 	import flash.display.MovieClip;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.filesystem.File;
 	import flash.net.FileFilter;
 	import flash.net.FileReference;
+	import flash.system.LoaderContext;
 	
 	public class SWFFileLoader extends EventDispatcher{
 		
@@ -51,7 +53,9 @@ package com.pixelrevision.textureAtlas{
 		}
 		
 		private function processData():void{
-			_loader.loadBytes(_fr.data);
+			var myLoaderContext:LoaderContext = new LoaderContext();
+			myLoaderContext.allowLoadBytesCodeExecution = true;
+			_loader.loadBytes(_fr.data, myLoaderContext);
 		}
 		
 		private function clipLoaded(e:Event):void{
@@ -62,6 +66,10 @@ package com.pixelrevision.textureAtlas{
 			}
 			this.dispatchEvent(new TextureAtlasEvent(TextureAtlasEvent.SWF_LOADED) );
 		}
+		
+		public function setFileReferenceFromFile(file:File) {
+			_fr = file;
+			onSelected(null)		}
 		
 		public function get swf():MovieClip{
 			return _swf;

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:TextureAtlas="uk.co.ninety9lives.TextureAtlas.*">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.filesystem.File;
+			
+			import mx.controls.TextInput;
+			import mx.events.FileEvent;
+			private var directoryProcessor:DirectoryProcessor
+			private function initFiles():void
+			{
+				
+				var localSettings:LocalSettings = new LocalSettings();
+				
+				
+				sourceDirectory_output.text = localSettings.sourceDirectory.nativePath;
+				outputDirectory_output.text = localSettings.outputDirectory.nativePath;
+				localizeDirectory_output.text = localSettings.localizeDirectory.nativePath;
+				sourceDirectory.directory = File.userDirectory;
+				outputDirectory.directory = File.userDirectory;
+				localizeDirectory.directory = File.userDirectory;
+				
+				
+			
+			}
+			
+			private function setOutput(event:FileEvent,   from:FileSystemTree, to:spark.components.TextInput):void
+			{
+				
+				to.text = event.file.nativePath;
+				var localSettings:LocalSettings = new LocalSettings();
+				localSettings.setValue(from.id,event.file);
+				
+			}
+			
+			private function processDir() : void {
+				directoryProcessor = new DirectoryProcessor();
+				directoryProcessor.processPath();
+			}
+		]]>
+	</fx:Script>
+	<s:HGroup>
+		
+	
+		<TextureAtlas:ProcessDirButton click="processDir()"  fontWeight="bold" width="108" label="Start Batch"/>
+		<s:HGroup verticalAlign="bottom"   initialize="initFiles()"  horizontalAlign="right">
+			
+		
+			<s:VGroup >
+				<s:Label text="Source Directory" />
+				<mx:FileSystemTree id="sourceDirectory" directoryOpening="setOutput(event, sourceDirectory, sourceDirectory_output)" width="100%" height="100%"/>
+				<s:TextInput id="sourceDirectory_output"  textAlign="left" fontWeight="normal" text="werrwrwerwerwerwerwerwerwerwerwerwerwerwerwerwerw"/> 
+			</s:VGroup>
+			
+			<s:VGroup >
+				<s:Label text="Output Directory" />
+				<mx:FileSystemTree id="outputDirectory" directoryOpening="setOutput(event,outputDirectory, outputDirectory_output)" width="100%" height="100%"/>
+				<s:TextInput id="outputDirectory_output" width="100%" /> 
+			</s:VGroup>
+			
+			<s:VGroup >
+				<s:Label text="Text (XML) Directory" />
+				<mx:FileSystemTree id="localizeDirectory" directoryOpening="setOutput(event, localizeDirectory, localizeDirectory_output)" width="100%" height="100%"/>
+				<s:TextInput id="localizeDirectory_output" width="100%" />   
+			</s:VGroup>
+		</s:HGroup>
+	</s:HGroup>
+</s:Group>
