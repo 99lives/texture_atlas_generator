@@ -56,7 +56,7 @@ package uk.co.ninety9lives.TextureAtlas
 		}
 		
 		protected function onEnterFrame(e:Event) : void {
-			trace(selected,selected.name + "_" + appendIntToString(selected.currentFrame-1, 5));
+		
 			drawItem(selected, selected.name + "_" + appendIntToString(selected.currentFrame-1, 5), selected.name);
 			if (selected.currentFrame  < selected.totalFrames) 
 				selected.gotoAndStop(selected.currentFrame+1);

@@ -2,25 +2,61 @@
 <s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
 					   xmlns:s="library://ns.adobe.com/flex/spark" 
 					   xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:TextureAtlas="uk.co.ninety9lives.TextureAtlas.*"
-					   
+					   creationComplete="checkForUpdate()"
 					   
 					    width="100%" height="100%">
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
+	<mx:VBox  backgroundColor="blue" width="100%" height="20" bottom="0">
+		<mx:Label color="white" id="ver" />
+	</mx:VBox>
 	<s:SpriteVisualElement id="holder" addedToStage="onAdded()" />
 	<TextureAtlas:ButtonHolders right="0" top="0"/>
-	
+
 	
 	<fx:Script >
 		<![CDATA[
+			import air.update.ApplicationUpdaterUI;
+			import air.update.events.UpdateEvent;
+			
 			import com.pixelrevision.textureAtlas.TextureAtlas;
-			public function onAdded() {
+			
+			import flash.events.ErrorEvent;
+			
+			import mx.controls.Alert;
+			
+			public function onAdded(): void  {
 				
 				var textureAtlas:TextureAtlas = new TextureAtlas();
-				holder.addChild(textureAtlas);
+				holder.addChild(textureAtlas);			
+			}
 			
+			private var appUpdater:ApplicationUpdaterUI = new ApplicationUpdaterUI();
 			
+			private function checkForUpdate():void {
+				setApplicationVersion(); // Find the current version so we can show it below
+				appUpdater.updateURL = "http://99lives.co.uk/textureTool/update.xml"; // Server-side XML file describing update
+				appUpdater.isCheckForUpdateVisible = false; // We won't ask permission to check for an update
+				appUpdater.addEventListener(UpdateEvent.INITIALIZED, onUpdate); // Once initialized, run onUpdate
+				appUpdater.addEventListener(ErrorEvent.ERROR, onError); // If something goes wrong, run onError
+				//appUpdater.addEventListener(UpdateEvent.
+				appUpdater.initialize(); // Initialize the update framework
+			}
+			
+			private function onError(event:ErrorEvent):void {
+				Alert.show(event.toString());
+			}
+			
+			private function onUpdate(event:UpdateEvent):void {
+				appUpdater.checkNow(); // Go check for an update now
+			}
+			
+			// Find the current version for our Label below
+			private function setApplicationVersion():void {
+				var appXML:XML = NativeApplication.nativeApplication.applicationDescriptor;
+				var ns:Namespace = appXML.namespace();
+				ver.text = "Current version is " + appXML.ns::version;
 			}
 		]]>
 	</fx:Script>

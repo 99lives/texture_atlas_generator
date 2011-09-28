@@ -76,6 +76,7 @@ package uk.co.ninety9lives.TextureAtlas
 		}
 		
 		public function findTextFields(swf:MovieClip) : Array {
+			textFields= [];
 			recurse(swf);
 			return textFields;			
 		}

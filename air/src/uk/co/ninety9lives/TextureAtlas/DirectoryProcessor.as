@@ -20,6 +20,8 @@ package uk.co.ninety9lives.TextureAtlas
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.getQualifiedSuperclassName;
 	
+
+	
 	public class DirectoryProcessor extends EventDispatcher {
 	
 		private var _swfLoader:SWFFileLoader;
@@ -81,7 +83,7 @@ package uk.co.ninety9lives.TextureAtlas
 		//A swf has finished loading and is ready to be processed
 		private function newSWFLoaded(e:Event):void
 		{
-			trace("Loaded");			
+			Log.msg("loaded new File :" + currentFile.nativePath);		
 			createJobs();
 			nextJob();
 		}
@@ -153,49 +155,18 @@ package uk.co.ninety9lives.TextureAtlas
 		}
 
 		//callback to let us know the swf has been processed
+		//write the local files and reset the canvas size
 		public function onLayoutComplete(event:Event): void  {
-			_textureLayout.saveLocal(currentFile.name,outputPath);
-			
+			Log.msg("writing job :" + currentFile.name + outputPath);
+			_textureLayout.saveLocal(currentFile.name, outputPath);
+	
 			Settings.sharedInstance.canvasWidth  = savedCanvasHeight;
 			Settings.sharedInstance.canvasHeight = savedCanvasWidth;
-			
-			_textureLayout.saveLocal(currentFile.name, outputPath);
+			nextJob();
 			
 		}
 		
-		public function write(locale:String): void  {
-			/*
-			var localSettings:LocalSettings = new LocalSettings();
-		
-			var basePath:String = localSettings.outputDirectory.nativePath+File.separator;
-			
-			var c_width: Number = Settings.sharedInstance.canvasWidth;
-			var c_height: Number = Settings.sharedInstance.canvasHeight;
-						
 
-			_textureLayout = new TextureLayout();		
-			
-			//trace(getQualifiedSuperclassName(d));
-			
-			_textureLayout.processSWF(d);
-			_textureLayout.saveLocal(currentFile.name, basePath+"hi"+File.separator+locale+File.separator);
-			
-			Settings.sharedInstance.canvasWidth *=0.5;
-			Settings.sharedInstance.canvasHeight *=0.5;			
-					
-			//var filterScaler:FilterScaler = new FilterScaler();
-			//filterScaler.processItems(_swfLoader.swf, 0.5);
-			_textureLayout2 = new TextureLayout();
-			_textureLayout2.scale=0.5;
-			
-			
-			_textureLayout2.processSWF(_swfLoader.swf);
-			_textureLayout2.saveLocal(currentFile.name, basePath+"lo"+File.separator+locale+File.separator);			
-		
-			Settings.sharedInstance.canvasWidth =c_width;
-			Settings.sharedInstance.canvasHeight = c_height;
-			*/
-		}
 
 	
 	}
