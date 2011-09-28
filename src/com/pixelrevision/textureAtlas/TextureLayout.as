@@ -86,18 +86,23 @@ package com.pixelrevision.textureAtlas{
 			
 			for(var i:uint=0; i<swf.numChildren; i++){
 				selected = MovieClip( swf.getChildAt(i) );
-				
+				selected.gotoAndStop(1); //reset
+
 				// check for frames
 				if(selected.totalFrames > 1){
 					for(var m:uint=0; m<selected.totalFrames; m++){
 						selected.gotoAndStop(m+1);
+						selected.gotoAndStop(1);
+						trace(selected.currentFrame);
 						drawItem(selected, selected.name + "_" + appendIntToString(m, 5), selected.name);
 					}
+					selected.gotoAndStop(1); //reset
 				}else{
 					drawItem(selected, selected.name, selected.name);
 				}
 			}
 			layoutChildren();
+			SWFFileLoader.sharedInstance.dispatchEvent(new TextureAtlasEvent(TextureAtlasEvent.SWF_PROCESSED));
 		}
 		
 		protected function appendIntToString(num:int, numOfPlaces:int):String{

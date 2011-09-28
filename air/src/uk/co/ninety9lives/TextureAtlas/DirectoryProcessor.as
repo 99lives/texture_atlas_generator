@@ -1,90 +1,200 @@
 package uk.co.ninety9lives.TextureAtlas
 {
 	import com.btbStudios.air.utils.FileUtils;
+	import com.kerb.utils.KerbUtils;
 	import com.pixelrevision.textureAtlas.SWFFileLoader;
 	import com.pixelrevision.textureAtlas.Settings;
 	import com.pixelrevision.textureAtlas.events.TextureAtlasEvent;
 	
+	import flash.display.DisplayObject;
+	import flash.display.Loader;
+	import flash.display.MovieClip;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IEventDispatcher;
 	import flash.filesystem.File;
+	import flash.geom.Rectangle;
+	import flash.system.LoaderContext;
+	import flash.text.engine.Kerning;
+	import flash.utils.getDefinitionByName;
+	import flash.utils.getQualifiedClassName;
+	import flash.utils.getQualifiedSuperclassName;
 	
 	public class DirectoryProcessor extends EventDispatcher {
 	
 		private var _swfLoader:SWFFileLoader;
 		private var _textureLayout:TextureLayout;
 		private var files:Array
-		private var currentFile:File;
-	
+		private var currentFile:File;			
+		private var loader:Loader;		
+		private var basePath:String;
+		private var jobs:Array;
+		private var currentJob:Object;			
+		private var localizer:Localizer;
+		private var savedCanvasWidth;
+		private var savedCanvasHeight;
+		
+		
+		//default scales to output to 
+		public var scales:Array = [{name:"hi", scale:1},{name:"med", scale:.5},{name:"low", scale:.25}];
 
 		
 		public function DirectoryProcessor(target:IEventDispatcher=null)
 		{
 			super(target);
+					
 			_swfLoader= SWFFileLoader.sharedInstance;			
-			_swfLoader.addEventListener(TextureAtlasEvent.SWF_LOADED, newSWFLoaded);
-			
+			_swfLoader.addEventListener(TextureAtlasEvent.SWF_LOADED, newSWFLoaded);					
 		}
 		
+		//start point.  read a direcotry of swfs and combine with localized xml
 		public function processPath() : void {
 			var localSettings:LocalSettings = new LocalSettings();
-
+			basePath = localSettings.outputDirectory.nativePath+File.separator;	
+			
+			//find all swfs
 			files = FileUtils.GetAllFilesFromDir(localSettings.sourceDirectory, false);
-			processNextFile();
-	
+			
+			//set up localizer
+			localizer = new Localizer();			
+			localizer.discoverLocales(localSettings.localizeDirectory);					
+			
+			//begin process
+			processNextFile();	
 			
 		}
 		
-		private function processNextFile() {
+		//Only process swf files
+		private function processNextFile(): void  {
 			if (files.length > 0) {
 				currentFile = files.pop();
-				if (currentFile.extension=="swf") 
+				if (currentFile.extension=="swf") {
+					_swfLoader.loadedEvent = TextureAtlasEvent.SWF_LOADED;
 					_swfLoader.setFileReferenceFromFile(currentFile);
+				}
 				else
 					processNextFile();
-			}
-			
-		
+			}			
 		}
 		
-		
+
+		//A swf has finished loading and is ready to be processed
 		private function newSWFLoaded(e:Event):void
 		{
-			var localSettings:LocalSettings = new LocalSettings();
-			var localizer:Localizer = new Localizer();
+			trace("Loaded");			
+			createJobs();
+			nextJob();
+		}
+		
+		//a job represents a specific operation on a swf - may localize text fields into a specific locale
+		//and/or scale the output.
+		private function createJobs() {
+			jobs=[];
+			for each (var locale:String in localizer.getLocalesListForSwf(_swfLoader.swf)) {				
+				for each (var scale:* in scales) {
+					var job:Object = {}
+					job.locale = locale;
+					job.scale = scale;
+					jobs.push(job);					
+				}				
+			}			
+		} 
+		
+		//Determine if the current swf has outstanding processing jobs to complete
+		private function nextJob() {
+			if (jobs.length == 0) {
+				processNextFile();
+			}else {
+				currentJob = jobs.pop();
+				loadSwf();
+			}			
+		}
+		
+		///reload a fesh copy of the swf data for each individual job
+		//yes non optimal - but a good way of removing weird inconsistancys of flash 
+		private function loadSwf() {						
+			var myLoaderContext:LoaderContext = new LoaderContext();
+			myLoaderContext.allowLoadBytesCodeExecution = true;
+			loader= new Loader();
+			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, clipLoaded);
+			loader.loadBytes(_swfLoader.fr.data, myLoaderContext);				
+		}
+		
+		// per job swf is loaded, perfom job specific operations 
+		private function clipLoaded(e:Event):void{
+			savedCanvasWidth  = Settings.sharedInstance.canvasWidth;
+			savedCanvasHeight =	Settings.sharedInstance.canvasHeight;	
 			
-			localizer.discoverLocales(localSettings.localizeDirectory);			
-			localizer.findTextFields(_swfLoader.swf);
-			localizer.saveLocales(this);
+			var _swf:MovieClip = MovieClip(loader.content);
+			_swf.gotoAndStop(1);
+			for(var i:uint=0; i<_swf.numChildren; i++){
+				MovieClip(_swf.getChildAt(i)).gotoAndStop(1);
+			}
+									
+			Settings.sharedInstance.canvasWidth  *=currentJob.scale.scale;
+			Settings.sharedInstance.canvasHeight *=currentJob.scale.scale;	
 			
-			processNextFile();
+			_textureLayout = new TextureLayout();
+			localizer.localize(currentJob.locale, _swf);
+			_textureLayout.addEventListener(Event.COMPLETE, onLayoutComplete);
+			_textureLayout.scale=currentJob.scale.scale;
+			_textureLayout.processSWF(_swf);			
+			
+		}
+		
+		//obtain the output path for the current job
+		private function get outputPath() : String {
+			var s:String = basePath;
+			s += currentJob.scale.name;
+			s += File.separator;
+			s += currentJob.locale;
+			s += File.separator;				
+			return  s;
+		}
+
+		//callback to let us know the swf has been processed
+		public function onLayoutComplete(event:Event): void  {
+			_textureLayout.saveLocal(currentFile.name,outputPath);
+			
+			Settings.sharedInstance.canvasWidth  = savedCanvasHeight;
+			Settings.sharedInstance.canvasHeight = savedCanvasWidth;
+			
+			_textureLayout.saveLocal(currentFile.name, outputPath);
+			
 		}
 		
 		public function write(locale:String): void  {
+			/*
 			var localSettings:LocalSettings = new LocalSettings();
 		
 			var basePath:String = localSettings.outputDirectory.nativePath+File.separator;
 			
 			var c_width: Number = Settings.sharedInstance.canvasWidth;
 			var c_height: Number = Settings.sharedInstance.canvasHeight;
+						
+
+			_textureLayout = new TextureLayout();		
 			
-			_textureLayout = new TextureLayout();
-			_textureLayout.processSWF(_swfLoader.swf);
+			//trace(getQualifiedSuperclassName(d));
+			
+			_textureLayout.processSWF(d);
 			_textureLayout.saveLocal(currentFile.name, basePath+"hi"+File.separator+locale+File.separator);
 			
 			Settings.sharedInstance.canvasWidth *=0.5;
 			Settings.sharedInstance.canvasHeight *=0.5;			
 					
+			//var filterScaler:FilterScaler = new FilterScaler();
+			//filterScaler.processItems(_swfLoader.swf, 0.5);
+			_textureLayout2 = new TextureLayout();
+			_textureLayout2.scale=0.5;
 			
-			_textureLayout = new TextureLayout();
-			_textureLayout.scale=0.5;
 			
-			_textureLayout.processSWF(_swfLoader.swf);
-			_textureLayout.saveLocal(currentFile.name, basePath+"lo"+File.separator+locale+File.separator);			
+			_textureLayout2.processSWF(_swfLoader.swf);
+			_textureLayout2.saveLocal(currentFile.name, basePath+"lo"+File.separator+locale+File.separator);			
 		
 			Settings.sharedInstance.canvasWidth =c_width;
 			Settings.sharedInstance.canvasHeight = c_height;
+			*/
 		}
 
 	

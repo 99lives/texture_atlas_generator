@@ -5,6 +5,7 @@ package com.pixelrevision.textureAtlas.events{
 	public class TextureAtlasEvent extends Event{
 		
 		public static const SWF_LOADED:String = "swfLoaded";
+		public static const SWF_PROCESSED:String = "swfProcessed";
 		public static const CANVAS_SIZE_CHANGED:String = "canvasSizeChanged";
 		
 		

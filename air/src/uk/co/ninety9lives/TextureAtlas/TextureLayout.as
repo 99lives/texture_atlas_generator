@@ -15,6 +15,7 @@ package uk.co.ninety9lives.TextureAtlas
 	import flash.display.IBitmapDrawable;
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
@@ -29,14 +30,48 @@ package uk.co.ninety9lives.TextureAtlas
 		{
 			super();
 		}
-		public var scale:Number = 1;
+		public var scale:Number = 1;		
+		protected var selected:MovieClip;
+		protected var swf:MovieClip;
+		protected var childIndex:Number;
+		
+		override public function processSWF(swf:MovieClip):void{
+			clear();
+			this.swf = swf;
+			childIndex=0;
+			getNextClip() ;
+			swf.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+
+		}
+		protected function getNextClip() {
+			if (childIndex == swf.numChildren) {
+				swf.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+				layoutChildren();
+				dispatchEvent(new Event(Event.COMPLETE));				
+			} else {
+				selected = MovieClip(swf.getChildAt(childIndex++));
+				
+			}
+			
+		}
+		
+		protected function onEnterFrame(e:Event) : void {
+			trace(selected,selected.name + "_" + appendIntToString(selected.currentFrame-1, 5));
+			drawItem(selected, selected.name + "_" + appendIntToString(selected.currentFrame-1, 5), selected.name);
+			if (selected.currentFrame  < selected.totalFrames) 
+				selected.gotoAndStop(selected.currentFrame+1);
+			else 
+				getNextClip() ;
+		}
 		
 
 		override protected function drawItem(clip:MovieClip, name:String = "", baseName:String =""):TextureItem{
 			
 			var label:String = "";
-			
+			var f:FilterScaler = new FilterScaler();
+			f.processItems(clip,scale);
 			var bounds:Rectangle = clip.getBounds(clip.parent);
+			
 			bounds.x *=scale;
 			bounds.y *=scale;
 			bounds.width *=scale;
@@ -56,6 +91,7 @@ package uk.co.ninety9lives.TextureAtlas
 			addItem(item);
 			return item;
 		}
+		
 		
 		 public function saveLocal(basename:String, dest_dir:String):void{
 			graphics.clear();
@@ -110,6 +146,7 @@ package uk.co.ninety9lives.TextureAtlas
 			var imgFile:File = new File(dest_dir+basename+".png");
 			var imgFileStream:FileStream = new FileStream();
 			imgFileStream.open(imgFile, FileMode.WRITE); 
+			
 			imgFileStream.writeBytes(img);
 			
 			/*

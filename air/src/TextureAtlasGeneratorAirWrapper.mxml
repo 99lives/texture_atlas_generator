@@ -16,6 +16,7 @@
 		<![CDATA[
 			import com.pixelrevision.textureAtlas.TextureAtlas;
 			public function onAdded() {
+				
 				var textureAtlas:TextureAtlas = new TextureAtlas();
 				holder.addChild(textureAtlas);
 			

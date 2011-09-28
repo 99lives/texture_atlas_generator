@@ -18,6 +18,9 @@ package com.pixelrevision.textureAtlas{
 		private var _fr:FileReference;
 		private var _loader:Loader;
 		private var _swf:MovieClip;
+
+		
+		public var loadedEvent:String;
 		
 		
 		public static function get sharedInstance():SWFFileLoader{
@@ -29,7 +32,9 @@ package com.pixelrevision.textureAtlas{
 			if(_sharedInstance){
 				throw new Error("SWFFileLoader is a singleton.  Please use sharedInstance.");
 			}
+			loadedEvent = TextureAtlasEvent.SWF_LOADED;
 			_loader = new Loader();
+
 			_loader.contentLoaderInfo.addEventListener(Event.COMPLETE, clipLoaded);
 		}
 		
@@ -52,10 +57,12 @@ package com.pixelrevision.textureAtlas{
 			processData();
 		}
 		
-		private function processData():void{
+		public function processData():void{
 			var myLoaderContext:LoaderContext = new LoaderContext();
 			myLoaderContext.allowLoadBytesCodeExecution = true;
 			_loader.loadBytes(_fr.data, myLoaderContext);
+			
+		
 		}
 		
 		private function clipLoaded(e:Event):void{
@@ -64,15 +71,23 @@ package com.pixelrevision.textureAtlas{
 			for(var i:uint=0; i<_swf.numChildren; i++){
 				MovieClip(_swf.getChildAt(i)).gotoAndStop(1);
 			}
-			this.dispatchEvent(new TextureAtlasEvent(TextureAtlasEvent.SWF_LOADED) );
+			
+			this.dispatchEvent(new TextureAtlasEvent(loadedEvent) );
 		}
 		
-		public function setFileReferenceFromFile(file:File) {
+		public function setFileReferenceFromFile(file:File):void  {
 			_fr = file;
 			onSelected(null)		}
 		
 		public function get swf():MovieClip{
 			return _swf;
+		}
+		public function get loader():Loader{
+			return _loader;
+		}
+		
+		public function get fr():FileReference{
+			return _fr;
 		}
 		
 	}

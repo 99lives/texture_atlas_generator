@@ -16,7 +16,7 @@ package uk.co.ninety9lives.TextureAtlas
 	{
 		private var textFields:Array = [];
 		private var localeFiles:Array;
-		private var locales:Array=[];
+		public var locales:Array=[];
 		public function Localizer()
 		{
 			
@@ -31,42 +31,53 @@ package uk.co.ninety9lives.TextureAtlas
 				fs.open(item, FileMode.READ);
 				locales.push ( XML(fs.readUTFBytes(fs.bytesAvailable)));
 			}
-
-
 		}
 		
-		public function saveLocales(writer:DirectoryProcessor) : void {
-			var tm:TextManager = TextManager.getInstance();
-			if (textFields.length == 0) {
-				//no localizable text 
-				writer.write("common");
-			}else {
-				for each (var item:XML in locales) {
-					tm.init(item);
-					for each (var text_field:TextField in textFields) {
-						if (tm.hasId(text_field.name)) {
-							tm.setTextField(text_field,text_field.name);
-						}					
-					}
-					writer.write(item.@locale);
-					
+		public function get hasText() : Boolean {
+			return (textFields.length > 0);			
+		}
+		
+		public function localize(locale:String, swf:MovieClip) : void {
+			var xml:XML = getLocale(locale);
+			if (xml != null) {
+				findTextFields(swf);
+				var tm:TextManager = TextManager.getInstance();
+				tm.init(xml);
+				for each (var text_field:TextField in textFields) {
+					//if (tm.hasId(text_field.name)) {
+						tm.setTextField(text_field,text_field.name);
+					//}					
+				}				
+			}			
+		}
+		
+		public function getLocale(locale:String) : XML {
+			var xml:XML;
+			for each (var item:XML in locales) {
+				if (String(item.@locale) == locale)  {
+					trace ("found locale", item.@locale);
+					xml = item;					
 				}
 			}
-
-		
+			return xml;
 		}
 		
-		public function localize() {
-			
-			
+		public function getLocalesListForSwf(swf:MovieClip) : Array {
+			findTextFields(swf);
+			if (!hasText) {
+				return ["common"];
+			} else {
+				var list:Array = [];
+				for each (var item:XML in locales) {
+					list.push(String(item.@locale));					
+				}
+				return list;
+			}
 		}
-		
-
 		
 		public function findTextFields(swf:MovieClip) : Array {
 			recurse(swf);
-			return textFields;
-			
+			return textFields;			
 		}
 		
 		private function recurse(target:DisplayObjectContainer):void {
