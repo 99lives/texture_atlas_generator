@@ -16,8 +16,8 @@ package uk.co.ninety9lives.TextureAtlas
 		
 		public  function get sourceDirectory() : File  {
 			
-			if (sharedObject.data.hasOwnProperty("sourceDirectory")) 
-				return new File(sharedObject.data.sourceDirectory) ;
+			if (sharedObject.data.hasOwnProperty("sourceDirectory_output")) 
+				return new File(sharedObject.data.sourceDirectory_output) ;
 			else 
 				return File.userDirectory;
 			
@@ -25,16 +25,16 @@ package uk.co.ninety9lives.TextureAtlas
 		}
 		
 		public  function get outputDirectory() : File  {
-			if (sharedObject.data.hasOwnProperty("outputDirectory")) 
-				return new File(sharedObject.data.outputDirectory)  ;
+			if (sharedObject.data.hasOwnProperty("outputDirectory_output")) 
+				return new File(sharedObject.data.outputDirectory_output)  ;
 			else 
 				return File.userDirectory;
 			
 		}
 		
 		public  function get localizeDirectory() : File  {
-			if (sharedObject.data.hasOwnProperty("localizeDirectory")) 
-				return new File(sharedObject.data.localizeDirectory) ;
+			if (sharedObject.data.hasOwnProperty("localizeDirectory_output")) 
+				return new File(sharedObject.data.localizeDirectory_output) ;
 			else 
 				return File.userDirectory;
 			

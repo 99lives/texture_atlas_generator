@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" >
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			public function init() {
+				
+				Log.instance.addEventListener(Log.LOGGER_PROGRESS, onProgress);
+				Log.instance.addEventListener(Log.LOGGER_TRACE, onTrace);
+				
+			}
+			
+			private function onTrace(e:Event) : void {
+				txt.text += Log.lastTrace;
+			
+			}
+			
+			private function onProgress(e:Event) : void {
+								bar.setProgress(Log.lastProgress.current, Log.lastProgress.total);
+			}
+		]]>
+	</fx:Script>
+	<s:Panel title="Processing Batch" color="0x000000" 
+			 borderAlpha="0.15" 
+			 width="600" creationComplete="init()" >
+		
+		<s:VGroup width="100%">
+			
+	
+	
+			<s:TextArea id="txt" width="100%" height="70" color="0x323232" horizontalCenter="0" verticalCenter="0" restrict="a-z 1-9"					/>
+	
+			
+			<mx:ProgressBar id="bar" labelPlacement="bottom"  height="30" visible="true" 
+							color="0x323232"  direction="right" mode="manual" width="100%"/>
+		</s:VGroup>
+	
+		
+	</s:Panel>
+</s:Group>

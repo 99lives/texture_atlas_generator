@@ -33,12 +33,13 @@ package uk.co.ninety9lives.TextureAtlas
 		private var jobs:Array;
 		private var currentJob:Object;			
 		private var localizer:Localizer;
-		private var savedCanvasWidth;
-		private var savedCanvasHeight;
-		
-		
+		private var savedCanvasWidth:Number;
+		private var savedCanvasHeight:Number;
+		private var myLoaderContext:LoaderContext
+		private var totalFiles:Number;
+
 		//default scales to output to 
-		public var scales:Array = [{name:"hi", scale:1},{name:"med", scale:.5},{name:"low", scale:.25}];
+		public var scales:Array = [{name:"hi", scale:1},{name:"med", scale:.5}];
 
 		
 		public function DirectoryProcessor(target:IEventDispatcher=null)
@@ -46,16 +47,25 @@ package uk.co.ninety9lives.TextureAtlas
 			super(target);
 					
 			_swfLoader= SWFFileLoader.sharedInstance;			
-			_swfLoader.addEventListener(TextureAtlasEvent.SWF_LOADED, newSWFLoaded);					
+			_swfLoader.addEventListener(TextureAtlasEvent.SWF_PROCESSED, newSWFLoaded);					
 		}
 		
 		//start point.  read a direcotry of swfs and combine with localized xml
 		public function processPath() : void {
+			
+			myLoaderContext = new LoaderContext();
+			myLoaderContext.allowLoadBytesCodeExecution = true;
+			
+			loader= new Loader();
+			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, clipLoaded);
+			
 			var localSettings:LocalSettings = new LocalSettings();
 			basePath = localSettings.outputDirectory.nativePath+File.separator;	
 			
 			//find all swfs
 			files = FileUtils.GetAllFilesFromDir(localSettings.sourceDirectory, false);
+			totalFiles = files.length;
+			Log.progress({current:0, total:100});
 			
 			//set up localizer
 			localizer = new Localizer();			
@@ -68,6 +78,7 @@ package uk.co.ninety9lives.TextureAtlas
 		
 		//Only process swf files
 		private function processNextFile(): void  {
+			Log.progress({current:totalFiles-files.length, total:totalFiles});
 			if (files.length > 0) {
 				currentFile = files.pop();
 				if (currentFile.extension=="swf") {
@@ -90,7 +101,7 @@ package uk.co.ninety9lives.TextureAtlas
 		
 		//a job represents a specific operation on a swf - may localize text fields into a specific locale
 		//and/or scale the output.
-		private function createJobs() {
+		private function createJobs():void  {
 			jobs=[];
 			for each (var locale:String in localizer.getLocalesListForSwf(_swfLoader.swf)) {				
 				for each (var scale:* in scales) {
@@ -103,7 +114,7 @@ package uk.co.ninety9lives.TextureAtlas
 		} 
 		
 		//Determine if the current swf has outstanding processing jobs to complete
-		private function nextJob() {
+		private function nextJob(): void {
 			if (jobs.length == 0) {
 				processNextFile();
 			}else {
@@ -111,19 +122,19 @@ package uk.co.ninety9lives.TextureAtlas
 				loadSwf();
 			}			
 		}
-		
+		var times:Number = 0;
 		///reload a fesh copy of the swf data for each individual job
 		//yes non optimal - but a good way of removing weird inconsistancys of flash 
-		private function loadSwf() {						
-			var myLoaderContext:LoaderContext = new LoaderContext();
-			myLoaderContext.allowLoadBytesCodeExecution = true;
-			loader= new Loader();
-			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, clipLoaded);
-			loader.loadBytes(_swfLoader.fr.data, myLoaderContext);				
+		private function loadSwf() : void  {	
+			trace("load swf start");
+			//if (times++ < 2)
+				loader.loadBytes(_swfLoader.fr.data, myLoaderContext);	
+			trace("load swf end");
 		}
 		
 		// per job swf is loaded, perfom job specific operations 
 		private function clipLoaded(e:Event):void{
+			trace("clipLoaded start");
 			savedCanvasWidth  = Settings.sharedInstance.canvasWidth;
 			savedCanvasHeight =	Settings.sharedInstance.canvasHeight;	
 			
@@ -142,6 +153,7 @@ package uk.co.ninety9lives.TextureAtlas
 			_textureLayout.scale=currentJob.scale.scale;
 			_textureLayout.processSWF(_swf);			
 			
+			trace("clipLoaded end");
 		}
 		
 		//obtain the output path for the current job
@@ -158,7 +170,10 @@ package uk.co.ninety9lives.TextureAtlas
 		//write the local files and reset the canvas size
 		public function onLayoutComplete(event:Event): void  {
 			Log.msg("writing job :" + currentFile.name + outputPath);
-			_textureLayout.saveLocal(currentFile.name, outputPath);
+			
+			var baseName:String = currentFile.name;
+			baseName = baseName.substr(0,baseName.lastIndexOf('.'));
+			_textureLayout.saveLocal(baseName, outputPath);
 	
 			Settings.sharedInstance.canvasWidth  = savedCanvasHeight;
 			Settings.sharedInstance.canvasHeight = savedCanvasWidth;

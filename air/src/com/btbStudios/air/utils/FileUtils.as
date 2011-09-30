@@ -59,7 +59,7 @@ package com.btbStudios.air.utils
 				}
 				else
 				{
-					arr.push(lstFile);
+					if (!lstFile.isDirectory) arr.push(lstFile);
 				}
 			}
 			

@@ -43,6 +43,15 @@ package uk.co.ninety9lives.TextureAtlas
 			swf.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 
 		}
+		
+		protected function onEnterFrame(e:Event) : void {
+			
+			drawItem(selected, selected.name + "_" + appendIntToString(selected.currentFrame-1, 5), selected.name);
+			if (selected.currentFrame  < selected.totalFrames) 
+				selected.gotoAndStop(selected.currentFrame+1);
+			else 
+				getNextClip() ;
+		}
 		protected function getNextClip() {
 			if (childIndex == swf.numChildren) {
 				swf.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
@@ -55,14 +64,7 @@ package uk.co.ninety9lives.TextureAtlas
 			
 		}
 		
-		protected function onEnterFrame(e:Event) : void {
-		
-			drawItem(selected, selected.name + "_" + appendIntToString(selected.currentFrame-1, 5), selected.name);
-			if (selected.currentFrame  < selected.totalFrames) 
-				selected.gotoAndStop(selected.currentFrame+1);
-			else 
-				getNextClip() ;
-		}
+
 		
 
 		override protected function drawItem(clip:MovieClip, name:String = "", baseName:String =""):TextureItem{
@@ -97,13 +99,12 @@ package uk.co.ninety9lives.TextureAtlas
 			graphics.clear();
 			// prepare files
 			var bmd:BitmapData = new BitmapData(_settings.canvasWidth, _settings.canvasHeight, true, 0x000000);
-			var json:Object = new Object();
-			json.textures = [];
-			json.imagePath = _settings.textureName  + ".png";
+
 			
 			var xml:XML = new XML(<TextureAtlas></TextureAtlas>);
-			xml.@imagePath = _settings.textureName  + ".png";
+			xml.@imagePath = basename+".png"  ;
 			
+			var marmaladeGroupGenerator:MarmaladeGroupGenerator = new MarmaladeGroupGenerator();			
 			
 			for(var i:uint=0; i<_items.length; i++){
 				var matrix:Matrix = new Matrix();
@@ -128,42 +129,33 @@ package uk.co.ninety9lives.TextureAtlas
 				textureData.height = _items[i].height;
 				textureData.name = _items[i].textureName;
 				if(_items[i].frameName != "") textureData.frameLabel = _items[i].frameName;
-				json.textures.push(textureData);
+	
 			}
 			
-			var luaGenerator:LUAGenerator = new LUAGenerator();
-			var lua:String = luaGenerator.generate(_items);
-			// trace(lua);
+		
 			
 			// now setup writeable objects
 			var img:ByteArray = PNGEncoder.encode(bmd);
-			var xmlString:String = xml.toString();
-			var jsonString:String = JSON.encode(json);
-			
+			var xmlString:String = xml.toString();		
+			var groupString:String = marmaladeGroupGenerator.getString(basename);
 			
 			//Write Each file
 			
 			var imgFile:File = new File(dest_dir+basename+".png");
 			var imgFileStream:FileStream = new FileStream();
-			imgFileStream.open(imgFile, FileMode.WRITE); 
-			
+			imgFileStream.open(imgFile, FileMode.WRITE); 			
 			imgFileStream.writeBytes(img);
 			
-			/*
-			var zip:FZip = new FZip();
-			zip.addFile(_settings.textureName + ".png", img);
-			zip.addFileFromString(_settings.textureName + ".xml", xmlString);
-			zip.addFileFromString(_settings.textureName + ".json", jsonString);
-			zip.addFileFromString(_settings.textureName + ".lua", lua);
+			var xmlFile:File = new File(dest_dir+basename+".xml");			
+			var xmlFileStream:FileStream = new FileStream();
+			xmlFileStream.open(xmlFile, FileMode.WRITE); 			
+			xmlFileStream.writeUTFBytes(xmlString);
 			
-			// save
-			var zipArray:ByteArray = new ByteArray();
-			zip.serialize(zipArray, true);
-			var fr:FileReference = new FileReference();
-			fr.save(zipArray, _settings.textureName + ".zip");
-			
-			*/
-			
+			var groupFile:File = new File(dest_dir+basename+".group");			
+			var groupFileStream:FileStream = new FileStream();
+			groupFileStream.open(groupFile, FileMode.WRITE); 			
+			groupFileStream.writeUTFBytes(groupString);
+
 			drawBounds(null);
 		}
 	}

@@ -11,6 +11,10 @@ package com.pixelrevision.textureAtlas{
 	import flash.net.FileReference;
 	import flash.system.LoaderContext;
 	
+	import uk.co.ninety9lives.TextureAtlas.Log;
+	
+
+	
 	public class SWFFileLoader extends EventDispatcher{
 		
 		private static var _sharedInstance:SWFFileLoader;
@@ -69,7 +73,10 @@ package com.pixelrevision.textureAtlas{
 			_swf = MovieClip(_loader.content);
 			_swf.gotoAndStop(1);
 			for(var i:uint=0; i<_swf.numChildren; i++){
-				MovieClip(_swf.getChildAt(i)).gotoAndStop(1);
+				if (_swf.getChildAt(i) is MovieClip) 
+					MovieClip(_swf.getChildAt(i)).gotoAndStop(1);
+				else 
+					Log.msg("NOT A MOVIECLIP "+_fr.name + " " + _swf.getChildAt(i));
 			}
 			
 			this.dispatchEvent(new TextureAtlasEvent(loadedEvent) );

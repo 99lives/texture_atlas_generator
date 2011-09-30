@@ -12,8 +12,8 @@
 		<mx:Label color="white" id="ver" />
 	</mx:VBox>
 	<s:SpriteVisualElement id="holder" addedToStage="onAdded()" />
-	<TextureAtlas:ButtonHolders right="0" top="0"/>
-
+	<TextureAtlas:ButtonHolders top="5" width="100%" left="450"/>
+	<TextureAtlas:Progress  width="90%" bottom="40" right="20"/>
 	
 	<fx:Script >
 		<![CDATA[
@@ -36,7 +36,7 @@
 			
 			private function checkForUpdate():void {
 				setApplicationVersion(); // Find the current version so we can show it below
-				appUpdater.updateURL = "http://99lives.co.uk/textureTool/update.xml"; // Server-side XML file describing update
+				appUpdater.updateURL = "http://freesome.com/textureTool/update.xml"; // Server-side XML file describing update
 				appUpdater.isCheckForUpdateVisible = false; // We won't ask permission to check for an update
 				appUpdater.addEventListener(UpdateEvent.INITIALIZED, onUpdate); // Once initialized, run onUpdate
 				appUpdater.addEventListener(ErrorEvent.ERROR, onError); // If something goes wrong, run onError
