@@ -29,7 +29,7 @@ package uk.co.ninety9lives.TextureAtlas
 		{
 			trace(message);
 			lastProgress=message;
-			//instance.dispatchEvent (new Event(Log.LOGGER_PROGRESS));
+			instance.dispatchEvent (new Event(Log.LOGGER_PROGRESS));
 		}
 	}
 }
