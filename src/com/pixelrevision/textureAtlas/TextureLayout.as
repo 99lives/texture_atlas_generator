@@ -50,7 +50,7 @@ package com.pixelrevision.textureAtlas{
 		}
 		
 		protected function drawBounds(e:TextureAtlasEvent):void{
-			trace("drawBounds");
+			
 			graphics.clear();
 			graphics.lineStyle(1, 0x000000);
 			graphics.drawRect(0, 0, _settings.canvasWidth-1, _settings.canvasHeight-1);
@@ -59,7 +59,7 @@ package com.pixelrevision.textureAtlas{
 		}
 		
 		public function get withinBounds():Boolean{
-			trace(this.width, _settings.canvasWidth, this.height, _settings.canvasHeight);
+			//trace(this.width, _settings.canvasWidth, this.height, _settings.canvasHeight);
 			//Math.floor corrects for a rare rounding error
 			return (Math.floor(this.width) <= _settings.canvasWidth && Math.floor(this.height) <= _settings.canvasHeight);
 		}
@@ -103,8 +103,7 @@ package com.pixelrevision.textureAtlas{
 				}
 			}
 			layoutChildren();
-			trace("firing event");
-			SWFFileLoader.sharedInstance.dispatchEvent(new TextureAtlasEvent(TextureAtlasEvent.SWF_PROCESSED));
+			
 		}
 		
 		protected function appendIntToString(num:int, numOfPlaces:int):String{

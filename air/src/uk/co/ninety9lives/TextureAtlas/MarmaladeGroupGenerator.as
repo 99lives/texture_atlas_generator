@@ -18,8 +18,8 @@ package uk.co.ninety9lives.TextureAtlas {
 			output += '/* Must always name the group */\n';
 			output += 'name "'+basename+'"\n';
 			output += 'useTemplate "image" "match3n"\n';
-			output += '"'+basename+'.png"\n';
-			output += '"'+basename+'.xml"\n';
+			output += '"./'+basename+'.png"\n';
+			
 			output += "}\n";
 						
 			

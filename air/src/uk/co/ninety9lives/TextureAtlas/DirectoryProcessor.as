@@ -16,6 +16,7 @@ package uk.co.ninety9lives.TextureAtlas
 	import flash.geom.Rectangle;
 	import flash.system.LoaderContext;
 	import flash.text.engine.Kerning;
+	import flash.utils.ByteArray;
 	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.getQualifiedSuperclassName;
@@ -38,8 +39,10 @@ package uk.co.ninety9lives.TextureAtlas
 		private var myLoaderContext:LoaderContext
 		private var totalFiles:Number;
 
+		private var bytes:ByteArray;
 		//default scales to output to 
-		public var scales:Array = [{name:"hi", scale:1},{name:"med", scale:.5}];
+		//public var scales:Array = [{name:"hi", scale:1},{name:"med", scale:.5}];
+		public var scales:Array = [{name:"hi", scale:1}];
 
 		
 		public function DirectoryProcessor(target:IEventDispatcher=null)
@@ -94,9 +97,22 @@ package uk.co.ninety9lives.TextureAtlas
 		//A swf has finished loading and is ready to be processed
 		private function newSWFLoaded(e:Event):void
 		{
-			Log.msg("loaded new File :" + currentFile.nativePath);		
-			createJobs();
-			nextJob();
+			Log.msg("loaded new File :" + currentFile.nativePath);	
+			//check for too large a size
+			if (Settings.sharedInstance.canvasWidth > 2048) {				
+				var localSettings:LocalSettings = new LocalSettings();
+				var f:File = new File(localSettings.sourceDirectory.nativePath+"/rejected/"+currentFile.name);
+				currentFile.moveTo(f,true);
+				processNextFile();
+			} else {
+				//copy the loaded byte array
+				bytes = new ByteArray();
+				bytes.writeObject(_swfLoader.fr.data);
+				bytes.position=0;
+				bytes = bytes.readObject()
+				createJobs();
+				nextJob();
+			}
 		}
 		
 		//a job represents a specific operation on a swf - may localize text fields into a specific locale
@@ -128,7 +144,13 @@ package uk.co.ninety9lives.TextureAtlas
 		private function loadSwf() : void  {	
 			trace("load swf start");
 			//if (times++ < 2)
-				loader.loadBytes(_swfLoader.fr.data, myLoaderContext);	
+				//loader.loadBytes(_swfLoader.fr.data, myLoaderContext);
+			myLoaderContext = new LoaderContext();
+			myLoaderContext.allowLoadBytesCodeExecution = true;
+			
+			loader= new Loader();
+			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, clipLoaded);
+				loader.loadBytes(bytes, myLoaderContext);
 			trace("load swf end");
 		}
 		
@@ -180,9 +202,6 @@ package uk.co.ninety9lives.TextureAtlas
 			nextJob();
 			
 		}
-		
-
-
 	
 	}
 }

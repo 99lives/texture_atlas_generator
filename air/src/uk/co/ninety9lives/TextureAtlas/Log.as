@@ -21,7 +21,7 @@ package uk.co.ninety9lives.TextureAtlas
 		{
 			trace(message);
 			lastTrace=message;
-			instance.dispatchEvent (new Event(Log.LOGGER_TRACE));
+			//instance.dispatchEvent (new Event(Log.LOGGER_TRACE));
 		}
 		
 		public static var lastProgress:Object;
@@ -29,7 +29,7 @@ package uk.co.ninety9lives.TextureAtlas
 		{
 			trace(message);
 			lastProgress=message;
-			instance.dispatchEvent (new Event(Log.LOGGER_PROGRESS));
+			//instance.dispatchEvent (new Event(Log.LOGGER_PROGRESS));
 		}
 	}
 }

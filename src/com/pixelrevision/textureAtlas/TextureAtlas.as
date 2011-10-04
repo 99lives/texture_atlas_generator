@@ -67,6 +67,9 @@ package com.pixelrevision.textureAtlas{
 			}
 			menu.hInput.text = POW_2[i];
 			menu.wInput.text = POW_2[i];
+			
+			trace("firing event");
+			SWFFileLoader.sharedInstance.dispatchEvent(new TextureAtlasEvent(TextureAtlasEvent.SWF_PROCESSED));
 		}
 		
 		private function saveFiles(e:MouseEvent):void{

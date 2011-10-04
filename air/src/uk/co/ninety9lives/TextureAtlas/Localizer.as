@@ -87,6 +87,7 @@ package uk.co.ninety9lives.TextureAtlas
 				var child:DisplayObject = target.getChildAt(i);
 				
 				if (child is TextField ) {
+					
 					textFields.push(child);
 					
 				}

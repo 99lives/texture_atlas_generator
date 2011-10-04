@@ -45,7 +45,7 @@ package uk.co.ninety9lives.TextureAtlas
 		}
 		
 		protected function onEnterFrame(e:Event) : void {
-			
+			trace("in frame");
 			drawItem(selected, selected.name + "_" + appendIntToString(selected.currentFrame-1, 5), selected.name);
 			if (selected.currentFrame  < selected.totalFrames) 
 				selected.gotoAndStop(selected.currentFrame+1);
@@ -60,12 +60,8 @@ package uk.co.ninety9lives.TextureAtlas
 			} else {
 				selected = MovieClip(swf.getChildAt(childIndex++));
 				
-			}
-			
-		}
-		
-
-		
+			}			
+		}		
 
 		override protected function drawItem(clip:MovieClip, name:String = "", baseName:String =""):TextureItem{
 			
@@ -146,7 +142,7 @@ package uk.co.ninety9lives.TextureAtlas
 			imgFileStream.open(imgFile, FileMode.WRITE); 			
 			imgFileStream.writeBytes(img);
 			
-			var xmlFile:File = new File(dest_dir+basename+".xml");			
+			var xmlFile:File = new File(dest_dir+"../"+"xml/"+basename+".xml");			
 			var xmlFileStream:FileStream = new FileStream();
 			xmlFileStream.open(xmlFile, FileMode.WRITE); 			
 			xmlFileStream.writeUTFBytes(xmlString);
