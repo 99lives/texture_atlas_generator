@@ -17,7 +17,7 @@ package uk.co.ninety9lives.TextureAtlas
 		}
 		
 		private  function onClick(e:Event) : void {
-		
+		//blah
 			var file:File = new File();  
 			file.addEventListener(Event.SELECT, onSelect);  
 			
