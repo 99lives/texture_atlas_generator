@@ -26,7 +26,7 @@ package uk.co.ninety9lives.TextureAtlas
 		
 		private function onSelect(e:Event) : void {
 			var file:File = e.target as File;	
-			
+			this.stage.frameRate= 200;
 			
 		}
 	}

@@ -69,7 +69,7 @@ package uk.co.ninety9lives.TextureAtlas
 			} else {
 				var list:Array = [];
 				for each (var item:XML in locales) {
-					list.push(String(item.@locale));					
+					list.push(String(item.@locale).toLowerCase());					
 				}
 				return list;
 			}

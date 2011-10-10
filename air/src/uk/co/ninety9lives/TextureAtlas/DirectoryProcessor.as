@@ -38,11 +38,13 @@ package uk.co.ninety9lives.TextureAtlas
 		private var savedCanvasHeight:Number;
 		private var myLoaderContext:LoaderContext
 		private var totalFiles:Number;
+		private var marmaladeGlobalGroupScripts:MarmaladeGlobalGroupScripts;
+		private var marmaladeDerbhScripts:MarmaladeDerbhScripts;
 
 		private var bytes:ByteArray;
 		//default scales to output to 
-		//public var scales:Array = [{name:"hi", scale:1},{name:"med", scale:.5}];
-		public var scales:Array = [{name:"hi", scale:1}];
+		public var scales:Array = [{name:"hi", scale:1},{name:"med", scale:.5}];
+		//public var scales:Array = [{name:"hi", scale:1}];
 
 		
 		public function DirectoryProcessor(target:IEventDispatcher=null)
@@ -65,6 +67,8 @@ package uk.co.ninety9lives.TextureAtlas
 			var localSettings:LocalSettings = new LocalSettings();
 			basePath = localSettings.outputDirectory.nativePath+File.separator;	
 			
+			marmaladeGlobalGroupScripts = new MarmaladeGlobalGroupScripts(localSettings.outputDirectory);
+			marmaladeDerbhScripts = new MarmaladeDerbhScripts(localSettings.outputDirectory);
 			//find all swfs
 			files = FileUtils.GetAllFilesFromDir(localSettings.sourceDirectory, false);
 			totalFiles = files.length;
@@ -90,7 +94,9 @@ package uk.co.ninety9lives.TextureAtlas
 				}
 				else
 					processNextFile();
-			}			
+			}else {
+				postProcess();
+			}		
 		}
 		
 
@@ -134,10 +140,29 @@ package uk.co.ninety9lives.TextureAtlas
 			if (jobs.length == 0) {
 				processNextFile();
 			}else {
-				currentJob = jobs.pop();
-				loadSwf();
+				currentJob = jobs.pop();				
+				if (hasJobAlreadyRun()) {
+					trace("skipping job!!!");
+					nextJob();					
+				}else {
+					loadSwf();
+				}
 			}			
 		}
+		
+		//determine if the current job has already been run (source older then output) 
+		private function hasJobAlreadyRun() : Boolean {
+			var baseName:String = currentFile.name;
+			baseName = baseName.substr(0,baseName.lastIndexOf('.'));
+						
+			var imgFile:File = new File(outputPath+baseName+".png");
+			if (imgFile.exists)
+				return (currentFile.creationDate < imgFile.creationDate);
+			else 
+				return false;
+		}
+		
+		
 		var times:Number = 0;
 		///reload a fesh copy of the swf data for each individual job
 		//yes non optimal - but a good way of removing weird inconsistancys of flash 
@@ -199,7 +224,24 @@ package uk.co.ninety9lives.TextureAtlas
 	
 			Settings.sharedInstance.canvasWidth  = savedCanvasHeight;
 			Settings.sharedInstance.canvasHeight = savedCanvasWidth;
+			
+			marmaladeGlobalGroupScripts.generateFiles(new File(outputPath));
+			marmaladeDerbhScripts.generateFiles(new File(outputPath));
 			nextJob();
+			
+		}
+		
+		//Once all swf inputs have been processed 
+		//this stage will prepare glbal level scripts 
+		//desinged to smooth processing of the assets into 
+		//marmalade
+		private function postProcess() : void {
+			for each (var item:* in scales) {
+				
+				marmaladeDerbhScripts.generateXMLderbh(marmaladeDerbhScripts.oDir.resolvePath(item.name+"/xml"))
+			}
+			marmaladeGlobalGroupScripts.writeIncludeFile();
+			//marmaladeGlobalGroupScripts.generateAllGroups();
 			
 		}
 	
