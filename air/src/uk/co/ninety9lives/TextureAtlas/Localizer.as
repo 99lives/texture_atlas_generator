@@ -26,10 +26,12 @@ package uk.co.ninety9lives.TextureAtlas
 			localeFiles = FileUtils.GetAllFilesFromDir(dir, false);
 			
 			for each (var item:File in localeFiles) {
-				var fs:FileStream = new FileStream();
-				var b:ByteArray = new ByteArray();
-				fs.open(item, FileMode.READ);
-				locales.push ( XML(fs.readUTFBytes(fs.bytesAvailable)));
+				if (item.extension == "xml") {
+					var fs:FileStream = new FileStream();
+					var b:ByteArray = new ByteArray();
+					fs.open(item, FileMode.READ);
+					locales.push ( XML(fs.readUTFBytes(fs.bytesAvailable)));
+				}
 			}
 		}
 		
@@ -39,12 +41,14 @@ package uk.co.ninety9lives.TextureAtlas
 		
 		public function localize(locale:String, swf:MovieClip) : void {
 			var xml:XML = getLocale(locale);
+		
 			if (xml != null) {
 				findTextFields(swf);
 				var tm:TextManager = TextManager.getInstance();
 				tm.init(xml);
 				for each (var text_field:TextField in textFields) {
 					//if (tm.hasId(text_field.name)) {
+					trace(text_field.name, tm.getTextById(text_field.name));
 						tm.setTextField(text_field,text_field.name);
 					//}					
 				}				
@@ -54,7 +58,7 @@ package uk.co.ninety9lives.TextureAtlas
 		public function getLocale(locale:String) : XML {
 			var xml:XML;
 			for each (var item:XML in locales) {
-				if (String(item.@locale) == locale)  {
+				if (String(item.@locale).toLowerCase() == locale)  {
 					trace ("found locale", item.@locale);
 					xml = item;					
 				}
