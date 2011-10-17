@@ -17,6 +17,8 @@ package com.pixelrevision.textureAtlas{
 	import flash.net.FileReference;
 	import flash.utils.ByteArray;
 	
+	import uk.co.ninety9lives.TextureAtlas.AnimationProcessor;
+	
 	public class TextureLayout extends Sprite{
 		
 		protected var _settings:Settings;
@@ -86,20 +88,25 @@ package com.pixelrevision.textureAtlas{
 			var bounds:Rectangle;
 			
 			for(var i:uint=0; i<swf.numChildren; i++){
-				selected = MovieClip( swf.getChildAt(i) );
-				selected.gotoAndStop(1); //reset
-
-				// check for frames
-				if(selected.totalFrames > 1){
-					for(var m:uint=0; m<selected.totalFrames; m++){
-						selected.gotoAndStop(m+1);
-						selected.gotoAndStop(1);
-						trace(selected.currentFrame);
-						drawItem(selected, selected.name + "_" + appendIntToString(m, 5), selected.name);
+				if (swf.getChildAt(i) is MovieClip) {
+					
+					selected = MovieClip( swf.getChildAt(i) );
+					if (!AnimationProcessor.isAnimation(selected)) {
+						selected.gotoAndStop(1); //reset
+		
+						// check for frames
+						if(selected.totalFrames > 1){
+							for(var m:uint=0; m<selected.totalFrames; m++){
+								selected.gotoAndStop(m+1);
+								selected.gotoAndStop(1);
+								trace(selected.currentFrame);
+								drawItem(selected, selected.name + "_" + appendIntToString(m, 5), selected.name);
+							}
+							selected.gotoAndStop(1); //reset
+						}else{
+							drawItem(selected, selected.name, selected.name);
+						}
 					}
-					selected.gotoAndStop(1); //reset
-				}else{
-					drawItem(selected, selected.name, selected.name);
 				}
 			}
 			layoutChildren();
@@ -122,7 +129,7 @@ package com.pixelrevision.textureAtlas{
 			var bounds:Rectangle = clip.getBounds(clip.parent);
 	
 			var itemW:Number = Math.ceil(bounds.x + bounds.width);
-			var itemH:Number = Math.ceil(bounds.y + bounds.height);
+			var itemH:Number = bounds.height;//Math.ceil(bounds.y + bounds.height);
 			var bmd:BitmapData = new BitmapData(itemW, itemH, true, 0x00000000);
 			bmd.draw(clip);
 			if(clip.currentLabel != _currentLab && clip.currentLabel != null){

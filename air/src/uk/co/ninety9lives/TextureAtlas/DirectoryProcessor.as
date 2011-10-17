@@ -43,8 +43,8 @@ package uk.co.ninety9lives.TextureAtlas
 
 		private var bytes:ByteArray;
 		//default scales to output to 
-		public var scales:Array = [{name:"hi", scale:1},{name:"med", scale:.5}];
-		//public var scales:Array = [{name:"hi", scale:1}];
+		//public var scales:Array = [{name:"hi", scale:1},{name:"med", scale:.5}];
+		public var scales:Array = [{name:"hi", scale:1}];
 
 		
 		public function DirectoryProcessor(target:IEventDispatcher=null)
@@ -105,7 +105,7 @@ package uk.co.ninety9lives.TextureAtlas
 		{
 			Log.msg("loaded new File :" + currentFile.nativePath);	
 			//check for too large a size
-			if (Settings.sharedInstance.canvasWidth > 2048) {				
+			if (Settings.sharedInstance.canvasWidth > 99920480) {				
 				var localSettings:LocalSettings = new LocalSettings();
 				var f:File = new File(localSettings.sourceDirectory.nativePath+"/rejected/"+currentFile.name);
 				currentFile.moveTo(f,true);
@@ -130,7 +130,8 @@ package uk.co.ninety9lives.TextureAtlas
 					var job:Object = {}
 					job.locale = locale;
 					job.scale = scale;
-					jobs.push(job);					
+					jobs.push(job);		
+					trace("creating job", job.locale, job.scale.name, _swfLoader.swf.name);
 				}				
 			}			
 		} 
@@ -241,7 +242,7 @@ package uk.co.ninety9lives.TextureAtlas
 				marmaladeDerbhScripts.generateXMLderbh(marmaladeDerbhScripts.oDir.resolvePath(item.name+"/xml"))
 			}
 			marmaladeGlobalGroupScripts.writeIncludeFile();
-			//marmaladeGlobalGroupScripts.generateAllGroups();
+			
 			
 		}
 	

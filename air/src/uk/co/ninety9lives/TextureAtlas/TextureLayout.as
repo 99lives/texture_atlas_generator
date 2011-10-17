@@ -34,23 +34,36 @@ package uk.co.ninety9lives.TextureAtlas
 		protected var selected:MovieClip;
 		protected var swf:MovieClip;
 		protected var childIndex:Number;
+		protected var animationProcessor:AnimationProcessor
 		
 		override public function processSWF(swf:MovieClip):void{
 			clear();
+			animationProcessor = new AnimationProcessor();
 			this.swf = swf;
 			childIndex=0;
 			getNextClip() ;
-			swf.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			swf.addEventListener(Event.ENTER_FRAME, onEnterFrame);			
 
 		}
 		
-		protected function onEnterFrame(e:Event) : void {
-			trace("in frame");
-			drawItem(selected, selected.name + "_" + appendIntToString(selected.currentFrame-1, 5), selected.name);
+		//process the current clip - either add to the sprite sheet or process an an animation
+			protected function onEnterFrame(e:Event) : void {
+			
+			trace("in frame", selected, selected.currentFrame, selected.totalFrames );
+			//first process normal items
+			if (!AnimationProcessor.isAnimation(selected)) {
+				drawItem(selected, selected.name + "_" + appendIntToString(selected.currentFrame-1, 5), selected.name);
+					
 			if (selected.currentFrame  < selected.totalFrames) 
 				selected.gotoAndStop(selected.currentFrame+1);
 			else 
 				getNextClip() ;
+			}else {
+			//process animations
+				animationProcessor.processMC(selected);
+				getNextClip() ;
+				
+			}
 		}
 		protected function getNextClip() {
 			if (childIndex == swf.numChildren) {
@@ -152,6 +165,7 @@ package uk.co.ninety9lives.TextureAtlas
 			groupFileStream.open(groupFile, FileMode.WRITE); 			
 			groupFileStream.writeUTFBytes(groupString);
 
+			animationProcessor.writeXML( basename, dest_dir);
 			drawBounds(null);
 		}
 	}

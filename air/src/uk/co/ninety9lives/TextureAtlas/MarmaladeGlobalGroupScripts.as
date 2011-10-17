@@ -45,14 +45,17 @@ package uk.co.ninety9lives.TextureAtlas
 		private function writeGroupFile (data:String, dir:File): void  {
 			var groupFile:File = dir.resolvePath("_all.group");			
 			var groupFileStream:FileStream = new FileStream();
-			groupFileStream.open(groupFile, FileMode.WRITE); 			
+				groupFileStream.open(groupFile, FileMode.WRITE); 			
 			groupFileStream.writeUTFBytes(data);
-			allGroups.push(groupFile);
+			allGroups[groupFile.nativePath] = groupFile;
 		}	
 		
 		//write a file for inclusion in the c++ source code to build assets into textures		
 		public function writeIncludeFile() : void {
 			var sText:String = "";
+			for each (var item:File in allGroups)  {
+		
+			}
 			for each (var item:File in allGroups)  {
 				var index:Number = item.nativePath.lastIndexOf(oDir.name);
 				var path:String = item.nativePath.substr(index);
